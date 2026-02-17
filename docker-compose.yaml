@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:18
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/docker 
+
+  device-registry-api:
+    build:
+      context: ./src/
+      dockerfile: DeviceRegistrationAPI/Dockerfile
+    restart: always
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+
+  statitics-api:
+    build:
+      context: ./src
+      dockerfile: StatisticsAPI/Dockerfile
+    restart: always
+    ports:
+      - "5001:8080"
+    depends_on:
+      - device-registry-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      
+volumes:
+  postgres-data:
+
