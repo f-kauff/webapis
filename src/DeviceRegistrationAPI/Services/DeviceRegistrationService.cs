@@ -42,7 +42,7 @@ public class DeviceRegistrationService : IDeviceRegistrationService
                 userKey,
                 deviceType
             );
-            return Result.Error("duplicate_registration");
+            return Result.Successful(); // Idempotent response for duplicates
         }
 
         var registration = new DeviceRegistration
