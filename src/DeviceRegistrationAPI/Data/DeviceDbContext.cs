@@ -8,7 +8,7 @@ public class DeviceDbContext : DbContext
     public DeviceDbContext(DbContextOptions<DeviceDbContext> options)
         : base(options) { }
 
-    public DbSet<DeviceRegistration> DeviceRegistrations { get; set; }
+    public virtual DbSet<DeviceRegistration> DeviceRegistrations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
