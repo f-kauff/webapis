@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/docker 
 
-  device-registry-api:
+  device-registration-api:
     build:
       context: ./src/
       dockerfile: DeviceRegistrationAPI/Dockerfile
@@ -25,7 +25,7 @@ services:
       ConnectionStrings__DefaultConnection: Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
  
 
-  statitics-api:
+  statistics-api:
     build:
       context: ./src
       dockerfile: StatisticsAPI/Dockerfile
@@ -33,9 +33,11 @@ services:
     ports:
       - "5001:8080"
     depends_on:
-      - device-registry-api
+      - device-registration-api
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      DeviceRegistrationApiUrl: http://device-registration-api:8080
       
 volumes:
   postgres-data:
