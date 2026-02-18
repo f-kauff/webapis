@@ -1,4 +1,4 @@
-namespace DeviceRegistrationAPI.Models;
+namespace Shared.Models;
 
 public class DeviceRegistrationInput
 {
