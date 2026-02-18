@@ -31,6 +31,9 @@ dotnet new classlib -o src/Shared
 ```
 dotnet new xunit -n DeviceRegistrationAPI.UnitTests -o tests/DeviceRegistrationAPI.UnitTests
 dotnet add tests/DeviceRegistrationAPI.UnitTests reference src/DeviceRegistrationAPI/DeviceRegistrationAPI.csproj
+
+dotnet new xunit -n StatisticsAPI.UnitTests -o tests/StatisticsAPI.UnitTests
+dotnet add tests/StatisticsAPI.UnitTests reference src/StatisticsAPI/StatisticsAPI.csproj
 ```
 
 ### Add nuget package
@@ -42,6 +45,7 @@ dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
 
 dotnet add package Moq
 dotnet add package Moq.EntityFrameworkCore
+dotnet add package RichardSzalay.MockHttp
 ```
 ### Add project reference
 ```
