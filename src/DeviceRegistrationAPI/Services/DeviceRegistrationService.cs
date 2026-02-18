@@ -2,7 +2,6 @@ namespace DeviceRegistrationAPI.Services;
 
 using Data;
 using Microsoft.EntityFrameworkCore;
-using Models;
 using Shared.Models;
 
 public interface IDeviceRegistrationService

@@ -1,8 +1,8 @@
 using DeviceRegistrationAPI.Data;
-using DeviceRegistrationAPI.Models;
 using DeviceRegistrationAPI.Services;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Shared.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

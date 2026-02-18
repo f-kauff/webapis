@@ -1,7 +1,18 @@
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.EntityFrameworkCore;
+using Shared.Models;
+using StatisticsAPI.Data;
+using StatisticsAPI.Models;
+using StatisticsAPI.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
+builder.Services.AddDbContext<StatisticsDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -12,30 +23,48 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
+// Global error handling
+app.UseExceptionHandler(errorApp =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    errorApp.Run(async context =>
+    {
+        var result = new
+        {
+            statusCode = 400, // should be 500 for unexpected errors, but using 400  for demo
+            message = "An unexpected error occurred. Please try again later.",
+        };
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+        context.Response.StatusCode = 400;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(result);
+    });
+});
+
+app.MapPost(
+        "/Log/auth",
+        async (AuthLogInput input, IStatisticsService service) =>
+        {
+            var result = await service.LogAuthAsync(input);
+            if (result.IsSuccessful)
+            {
+                return Results.Ok(new { statusCode = 200, message = "success" });
+            }
+
+            return Results.BadRequest(new { statusCode = 400, message = result.ErrorMessage });
+        }
+    )
+    .WithName("LogAuth");
+
+app.MapGet(
+        "/Log/auth/statistics",
+        async (string? deviceType, IStatisticsService service) =>
+        {
+            var stats = await service.GetStatisticsAsync(deviceType);
+            return Results.Ok(stats);
+        }
+    )
+    .WithName("GetStatistics");
+
+// database migrations is managed by DeviceRegistrationAPI
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
