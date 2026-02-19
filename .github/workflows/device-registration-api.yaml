@@ -1,4 +1,4 @@
-name: DeviceRegistrationAPI CI
+name: DeviceRegistrationAPI CI/CD
 
 on:
   workflow_dispatch:
@@ -16,10 +16,11 @@ on:
 
 permissions:
   contents: write
-  
+
 jobs:
   release:
     uses: ./.github/workflows/_cicd.yaml
+    secrets: inherit
     with:
       app_name: "DeviceRegistrationAPI"
       app_project_path: "src/DeviceRegistrationAPI"
