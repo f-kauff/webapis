@@ -65,7 +65,7 @@ jobs:
       - name: Inform if no new version
         if: ${{ steps.semver.outputs.changed != 'true' }}
         run: |
-          echo "No changes in ${{ inputs.app_path }}. Skipping build/release."
+          echo "No changes in ${{ inputs.app_project_path }}. Skipping build/release."
           exit 0
 
       - name: Login to DockerHub
@@ -77,11 +77,12 @@ jobs:
 
       - name: Build Docker image
         if: ${{ steps.semver.outputs.changed == 'true' }}
+        id: build
         run: |
           VERSION="${{ steps.semver.outputs.version }}"
           IMAGE="${{ inputs.docker_image }}:${VERSION}"
           LATEST="${{ inputs.docker_image }}:latest"
-          docker build -t "${IMAGE}" -t "${LATEST}" "${{ inputs.app_path }}"
+          docker build -t "${IMAGE}" -t "${LATEST}" "${{ inputs.app_project_path }}"
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
           echo "latest=${LATEST}" >> $GITHUB_OUTPUT
 
