@@ -42,13 +42,8 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: Restore tests
-        run: dotnet restore "${{ inputs.test_project_path }}"
-        env:
-          DOTNET_NOLOGO: true
-
       - name: Run unit tests
-        run: dotnet test "${{ inputs.test_project_path }}" --configuration Release --no-build
+        run: dotnet test "${{ inputs.test_project_path }}" --configuration Release
         env:
           DOTNET_NOLOGO: true
 
