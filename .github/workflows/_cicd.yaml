@@ -1,0 +1,142 @@
+name: Application CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: "App name"
+        required: true
+        type: string
+      app_project_path:
+        description: "Path to the app project"
+        required: true
+        type: string
+      test_project_path:
+        description: "Path to the test project .csproj"
+        required: true
+        type: string
+      version_namespace:
+        description: "Namespace for semantic-version tags"
+        required: true
+        type: string
+      docker_image:
+        description: "Docker Hub image name"
+        required: true
+        type: string
+
+jobs:
+  ci-version-docker:
+    name: "${{ inputs.app_name }} CI/CD"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore tests
+        run: dotnet restore "${{ inputs.test_project_path }}"
+        env:
+          DOTNET_NOLOGO: true
+
+      - name: Run unit tests
+        run: dotnet test "${{ inputs.test_project_path }}" --configuration Release --no-build
+        env:
+          DOTNET_NOLOGO: true
+
+      - name: Determine semantic version
+        id: semver
+        uses: PaulHatch/semantic-version@v6.0.1
+        with:
+          tag_prefix: "v"
+          namespace: "${{ inputs.version_namespace }}"
+          change_path: "${{ inputs.app_project_path }}"
+          major_pattern: "BREAKING CHANGE"
+          minor_pattern: "feat"
+          patch_pattern: "fix"
+          initial_version: "0.1.0"
+
+      - name: Show computed version
+        run: |
+          echo "Namespace:     ${{ inputs.version_namespace }}"
+          echo "Changed:       ${{ steps.semver.outputs.changed }}"
+          echo "Version:       ${{ steps.semver.outputs.version }}"
+          echo "Tag:           ${{ steps.semver.outputs.tag }}"
+          echo "Tag version:   ${{ steps.semver.outputs.version_tag }}"
+
+      - name: Inform if no new version
+        if: ${{ steps.semver.outputs.changed != 'true' }}
+        run: |
+          echo "No changes in ${{ inputs.app_path }}. Skipping build/release."
+          exit 0
+
+      - name: Login to DockerHub
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        run: |
+          VERSION="${{ steps.semver.outputs.version }}"
+          IMAGE="${{ inputs.docker_image }}:${VERSION}"
+          LATEST="${{ inputs.docker_image }}:latest"
+          docker build -t "${IMAGE}" -t "${LATEST}" "${{ inputs.app_path }}"
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "latest=${LATEST}" >> $GITHUB_OUTPUT
+
+      - name: Push Docker image
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        run: |
+          docker push "${{ steps.build.outputs.image }}"
+          docker push "${{ steps.build.outputs.latest }}"
+
+      - name: Create git version tag
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        run: |
+          TAG="${{ steps.semver.outputs.version_tag }}"
+          git tag "${TAG}" "${GITHUB_SHA}"
+          git push origin "${TAG}"
+      
+      - name: Get git previous version tag
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        id: prev_tag
+        run: |
+          PREV_VERSION="${{ steps.semver.outputs.previous_version }}"
+          if [ -n "$PREV_VERSION" ]; then
+            PREV_TAG="v${PREV_VERSION}-${{ inputs.version_namespace }}"
+            echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+          else
+            echo "prev_tag=" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate changelog
+        if: ${{ steps.semver.outputs.changed == 'true' && steps.prev_tag.outputs.prev_tag != '' }}
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fromTag: ${{ steps.prev_tag.outputs.prev_tag }}
+          toTag: ${{ steps.semver.outputs.version_tag }}
+
+      - name: Create GitHub Release  
+        if: ${{ steps.semver.outputs.changed == 'true' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.semver.outputs.version_tag }}
+          name: "${{ inputs.app_name }} ${{ steps.semver.outputs.version }}"
+          body: |
+            ${{ inputs.app_name }} ${{ steps.semver.outputs.version }}
+            
+            ${{ steps.changelog.outputs.changelog || 'First release' }}

@@ -1,0 +1,25 @@
+name: DeviceRegistrationAPI CI
+
+on:
+  workflow_dispatch:
+    
+  push:
+    branches: [ main ]
+    paths:
+      - "src/DeviceRegistrationAPI/**"
+      - "tests/DeviceRegistrationAPI.UnitTests/**"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "src/DeviceRegistrationAPI/**"
+      - "tests/DeviceRegistrationAPI.UnitTests/**"
+
+jobs:
+  release:
+    uses: ./.github/workflows/_cicd.yaml
+    with:
+      app_name: "DeviceRegistrationAPI"
+      app_path: "src/DeviceRegistrationAPI"
+      test_project: "tests/DeviceRegistrationAPI.UnitTests/DeviceRegistrationAPI.UnitTests.csproj"
+      version_namespace: "device-registration-api"
+      docker_image: "yourdockeruser/device-registration-api"
