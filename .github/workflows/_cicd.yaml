@@ -12,7 +12,11 @@ on:
         required: true
         type: string
       test_project_path:
-        description: "Path to the test project .csproj"
+        description: "Path to the test project"
+        required: true
+        type: string
+      test_project_file:
+        description: "Path to the test project .csproj file"
         required: true
         type: string
       version_namespace:
@@ -43,7 +47,7 @@ jobs:
           dotnet-version: "10.x"
 
       - name: Run unit tests
-        run: dotnet test "${{ inputs.test_project_path }}" --configuration Release
+        run: dotnet test "${{ inputs.test_project_file }}" --configuration Release
         env:
           DOTNET_NOLOGO: true
 
@@ -59,7 +63,6 @@ jobs:
           echo "Namespace:     ${{ inputs.version_namespace }}"
           echo "Changed:       ${{ steps.semver.outputs.changed }}"
           echo "Version:       ${{ steps.semver.outputs.version }}"
-          echo "Tag:           ${{ steps.semver.outputs.tag }}"
           echo "Tag version:   ${{ steps.semver.outputs.version_tag }}"
 
       - name: Inform if no new version
@@ -104,15 +107,11 @@ jobs:
         id: prev_tag
         run: |
           PREV_VERSION="${{ steps.semver.outputs.previous_version }}"
-          if [ -n "$PREV_VERSION" ]; then
-            PREV_TAG="v${PREV_VERSION}-${{ inputs.version_namespace }}"
-            echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
-          else
-            echo "prev_tag=" >> $GITHUB_OUTPUT
-          fi
-      
+          PREV_TAG="v${PREV_VERSION}-${{ inputs.version_namespace }}"
+          echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+
       - name: Generate changelog
-        if: ${{ steps.semver.outputs.changed == 'true' && steps.prev_tag.outputs.prev_tag != '0.0.0' }}
+        if: ${{ steps.semver.outputs.changed == 'true' && steps.semver.outputs.previous_version != '0.0.0' }}
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v5
         env:
@@ -120,6 +119,10 @@ jobs:
         with:
           fromTag: ${{ steps.prev_tag.outputs.prev_tag }}
           toTag: ${{ steps.semver.outputs.version_tag }}
+          mode: "COMMIT"
+          includeOnlyPaths: |
+            ${{ inputs.app_project_path }}
+            ${{ inputs.test_project_path }}
 
       - name: Create GitHub Release  
         if: ${{ steps.semver.outputs.changed == 'true' }}

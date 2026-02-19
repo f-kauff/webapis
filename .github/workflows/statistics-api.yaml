@@ -24,6 +24,7 @@ jobs:
     with:
       app_name: "StatisticsAPI"
       app_project_path: "src/StatisticsAPI"
-      test_project_path: "tests/StatisticsAPI.UnitTests/StatisticsAPI.UnitTests.csproj"
+      test_project_path: "tests/StatisticsAPI.UnitTests"
+      test_project_file: "tests/StatisticsAPI.UnitTests/StatisticsAPI.UnitTests.csproj"
       version_namespace: "statistics-api"
       docker_image: "fkauff/statistics-api"

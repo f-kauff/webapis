@@ -24,6 +24,7 @@ jobs:
     with:
       app_name: "DeviceRegistrationAPI"
       app_project_path: "src/DeviceRegistrationAPI"
-      test_project_path: "tests/DeviceRegistrationAPI.UnitTests/DeviceRegistrationAPI.UnitTests.csproj"
+      test_project_path: "tests/DeviceRegistrationAPI.UnitTests"
+      test_project_file: "tests/DeviceRegistrationAPI.UnitTests/DeviceRegistrationAPI.UnitTests.csproj"
       version_namespace: "device-registration-api"
       docker_image: "fkauff/device-registration-api"
