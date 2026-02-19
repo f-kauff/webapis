@@ -65,6 +65,9 @@ app.MapGet(
     )
     .WithName("GetStatistics");
 
+// Healthcheck endpoint
+app.MapGet("/health", () => Results.Ok("OK")).WithName("HealthCheck");
+
 // database migrations is managed by DeviceRegistrationAPI
 
 app.Run();

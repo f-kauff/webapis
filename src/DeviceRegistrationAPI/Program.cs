@@ -59,6 +59,9 @@ app.MapPost(
     )
     .WithName("RegisterDevice");
 
+// Healthcheck endpoint
+app.MapGet("/health", () => Results.Ok("OK")).WithName("HealthCheck");
+
 // Apply database migrations at startup
 using (var scope = app.Services.CreateScope())
 {
