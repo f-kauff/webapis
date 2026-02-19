@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/_cicd.yaml
     with:
       app_name: "DeviceRegistrationAPI"
-      app_path: "src/DeviceRegistrationAPI"
-      test_project: "tests/DeviceRegistrationAPI.UnitTests/DeviceRegistrationAPI.UnitTests.csproj"
+      app_project_path: "src/DeviceRegistrationAPI"
+      test_project_path: "tests/DeviceRegistrationAPI.UnitTests/DeviceRegistrationAPI.UnitTests.csproj"
       version_namespace: "device-registration-api"
-      docker_image: "yourdockeruser/device-registration-api"
+      docker_image: "fkauff/device-registration-api"
