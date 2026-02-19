@@ -29,9 +29,6 @@ public class StatisticsServiceTests
         //mock logger context
         _loggerMock = new Mock<ILogger<StatisticsService>>();
         //mock http client
-        //_httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-        //_httpClient = new HttpClient(_httpMessageHandlerMock.Object);
-
         _httpMock = new MockHttpMessageHandler();
 
         //mock configuration
@@ -111,7 +108,11 @@ public class StatisticsServiceTests
 
         _httpMock
             .When(HttpMethod.Post, "/Device/register")
-            .Respond(HttpStatusCode.BadRequest, "application/json");
+            .Respond(
+                HttpStatusCode.BadRequest,
+                "application/json",
+                "{'statusCode' : 400, 'message' : 'Bad Request'}"
+            );
 
         // Act
         var result = await _service.LogAuthAsync(input);
