@@ -1,19 +1,19 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src
-COPY . .
-WORKDIR /src/DeviceRegistrationAPI
-RUN dotnet restore
-RUN dotnet build -c Release -o /app/build
 
-# Publish stage
-FROM build AS publish
+WORKDIR /src
+COPY src/DeviceRegistrationAPI/*.csproj ./DeviceRegistrationAPI/
+RUN dotnet restore ./DeviceRegistrationAPI/DeviceRegistrationAPI.csproj
+
+COPY src/DeviceRegistrationAPI/. ./DeviceRegistrationAPI/
+COPY src/Shared/. ./Shared/
+WORKDIR /src/DeviceRegistrationAPI
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 EXPOSE 8080
 
 # Start webAPI

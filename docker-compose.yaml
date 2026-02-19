@@ -13,8 +13,7 @@ services:
 
   device-registration-api:
     build:
-      context: ./src/
-      dockerfile: DeviceRegistrationAPI/Dockerfile
+      dockerfile: src/DeviceRegistrationAPI/Dockerfile
     restart: always
     ports:
       - "5000:8080"
@@ -27,8 +26,7 @@ services:
 
   statistics-api:
     build:
-      context: ./src
-      dockerfile: StatisticsAPI/Dockerfile
+      dockerfile: src/StatisticsAPI/Dockerfile
     restart: always
     ports:
       - "5001:8080"

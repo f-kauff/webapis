@@ -1,19 +1,18 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY . .
-WORKDIR /src/StatisticsAPI
-RUN dotnet restore
-RUN dotnet build -c Release -o /app/build
+COPY src/StatisticsAPI/*.csproj ./StatisticsAPI/
+RUN dotnet restore ./StatisticsAPI/StatisticsAPI.csproj
 
-# Publish stage
-FROM build AS publish
+COPY src/StatisticsAPI/. ./StatisticsAPI/
+COPY src/Shared/. ./Shared/
+WORKDIR /src/StatisticsAPI
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 EXPOSE 8080
 
 # Start webAPI
