@@ -82,7 +82,7 @@ jobs:
           VERSION="${{ steps.semver.outputs.version }}"
           IMAGE="${{ inputs.docker_image }}:${VERSION}"
           LATEST="${{ inputs.docker_image }}:latest"
-          docker build -t "${IMAGE}" -t "${LATEST}" "${{ inputs.app_project_path }}"
+          docker build -t "${IMAGE}" -t "${LATEST}" -f "${{ inputs.app_project_path }}/Dockerfile" .
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
           echo "latest=${LATEST}" >> $GITHUB_OUTPUT
 
