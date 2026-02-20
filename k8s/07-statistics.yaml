@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statistics-api
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statistics-api
+  template:
+    metadata:
+      labels:
+        app: statistics-api
+    spec:
+      serviceAccountName: dependency-waiter
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: wait-for-device-registration
+        image: bitnami/kubectl:latest
+        command:
+          - sh
+          - -c
+          - |
+            until kubectl wait --for=condition=ready pod -l app=device-registration-api -n demo --timeout=1s; do
+              echo "waiting for device-registration pod to become ready";
+              sleep 2;
+            done
+      containers:
+      - name: statistics-api
+        image: fkauff/statistics-api:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: connection-string
+        - name: DeviceRegistrationApiUrl
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DEVICE_REGISTRATION_API_URL
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ASPNETCORE_ENVIRONMENT
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statistics-api
+  namespace: demo
+spec:
+  selector:
+    app: statistics-api
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
